@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Kalkulator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kalkulator">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root {
+    --gap: 12px;
+    --reserve: 170px;
+    --s: min(calc((min(100vw, 440px) - 5 * var(--gap)) / 4), calc((100vh - var(--reserve) - 6 * var(--gap)) / 5));
+  }
+  @supports (height: 100dvh) {
+    :root {
+      --s: min(calc((min(100vw, 440px) - 5 * var(--gap)) / 4), calc((100dvh - var(--reserve) - 6 * var(--gap)) / 5));
+    }
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    :root { --reserve: 80px; --gap: 10px; }
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; background: #000; color: #fff;
+    overflow: hidden; overscroll-behavior: none;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+    -webkit-user-select: none; user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .calc {
+    height: 100%; max-width: 440px; margin: 0 auto;
+    display: flex; flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+  }
+
+  .display {
+    flex: 1; min-height: 0;
+    display: flex; align-items: flex-end; justify-content: flex-end;
+    padding: 0 calc(var(--gap) * 2) calc(var(--gap) * 0.75);
+    touch-action: none; overflow: hidden;
+  }
+  #num {
+    display: inline-block; white-space: nowrap;
+    font-weight: 300; line-height: 1; letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    font-size: 88px;
+  }
+
+  .keys {
+    display: grid;
+    grid-template-columns: repeat(4, var(--s));
+    grid-auto-rows: var(--s);
+    gap: var(--gap);
+    justify-content: center;
+    touch-action: manipulation;
+  }
+
+  .k {
+    appearance: none; -webkit-appearance: none; border: 0; margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    border-radius: 999px;
+    font: inherit; color: #fff;
+    font-size: calc(var(--s) * 0.46); font-weight: 400;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background-color .45s ease, color .25s ease;
+  }
+  .k:active { transition: none; }
+  .k:focus { outline: none; }
+  .k:focus-visible { outline: 3px solid rgba(255,255,255,.6); outline-offset: 2px; }
+
+  .num { background: #333333; }
+  .num:active { background: #737373; }
+
+  .fn { background: #a5a5a5; color: #000; font-size: calc(var(--s) * 0.40); }
+  .fn:active { background: #d9d9d9; }
+
+  .op { background: #ff9f0a; font-size: calc(var(--s) * 0.58); font-weight: 400; padding-bottom: 0.06em; }
+  .op:active { background: #fcc78f; }
+  .op.active { background: #fff; color: #ff9f0a; }
+  .op.active:active { background: #fcc78f; }
+
+  .zero {
+    grid-column: span 2; justify-content: flex-start;
+    padding-left: calc(var(--s) * 0.38);
+  }
+
+  @media (prefers-reduced-motion: reduce) { .k { transition: none; } }
+</style>
+</head>
+<body>
+<main class="calc">
+  <div class="display" id="display" aria-live="polite" aria-atomic="true">
+    <span id="num">0</span>
+  </div>
+
+  <div class="keys" role="group" aria-label="Tombol kalkulator">
+    <button class="k fn" id="ac" data-a="clear" aria-label="Hapus">AC</button>
+    <button class="k fn" data-a="neg" aria-label="Ubah tanda plus minus">+/&minus;</button>
+    <button class="k fn" data-a="pct" aria-label="Persen">%</button>
+    <button class="k op" data-a="op" data-op="/" aria-label="Bagi">&divide;</button>
+
+    <button class="k num" data-a="d" data-d="7">7</button>
+    <button class="k num" data-a="d" data-d="8">8</button>
+    <button class="k num" data-a="d" data-d="9">9</button>
+    <button class="k op" data-a="op" data-op="*" aria-label="Kali">&times;</button>
+
+    <button class="k num" data-a="d" data-d="4">4</button>
+    <button class="k num" data-a="d" data-d="5">5</button>
+    <button class="k num" data-a="d" data-d="6">6</button>
+    <button class="k op" data-a="op" data-op="-" aria-label="Kurang">&minus;</button>
+
+    <button class="k num" data-a="d" data-d="1">1</button>
+    <button class="k num" data-a="d" data-d="2">2</button>
+    <button class="k num" data-a="d" data-d="3">3</button>
+    <button class="k op" data-a="op" data-op="+" aria-label="Tambah">+</button>
+
+    <button class="k num zero" data-a="d" data-d="0">0</button>
+    <button class="k num" id="dot" data-a="dot" aria-label="Desimal">.</button>
+    <button class="k op" data-a="eq" aria-label="Sama dengan">=</button>
+  </div>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const $num = document.getElementById("num");
+  const $disp = document.getElementById("display");
+  const $ac = document.getElementById("ac");
+  const $dot = document.getElementById("dot");
+  const opBtns = [...document.querySelectorAll(".op[data-op]")];
+
+  // Pemisah ribuan & desimal ngikutin bahasa browser (Indonesia: 1.234,5)
+  let GROUP = ",", DEC = ".";
+  try {
+    const parts = new Intl.NumberFormat(navigator.language).formatToParts(11111.1);
+    GROUP = (parts.find(p => p.type === "group") || { value: "," }).value;
+    DEC = (parts.find(p => p.type === "decimal") || { value: "." }).value;
+  } catch (e) {}
+  $dot.textContent = DEC;
+
+  // State
+  let cur = "0";        // angka yang lagi tampil (string)
+  let acc = null;       // angka sebelum operator
+  let op = null;        // operator yang nunggu
+  let fresh = false;    // angka berikutnya mulai baru
+  let afterEq = false;  // baru habis "="
+  let dirty = false;    // ada ketikan -> tombol jadi "C"
+  let repeat = null;    // buat "=" berulang
+  let hl = false;       // highlight operator
+
+  const val = s => (s === "Error" ? NaN : Number(s));
+
+  function calc(a, o, b) {
+    switch (o) {
+      case "+": return a + b;
+      case "-": return a - b;
+      case "*": return a * b;
+      case "/": return b === 0 ? NaN : a / b;
+    }
+    return NaN;
+  }
+
+  function numToStr(n) {
+    if (!isFinite(n)) return "Error";
+    if (n === 0) return "0";
+    const a = Math.abs(n);
+    if (a >= 1e9 || a < 1e-8) {
+      let [m, e] = n.toExponential(8).split("e");
+      if (m.includes(".")) m = m.replace(/0+$/, "").replace(/\.$/, "");
+      return m + "e" + parseInt(e, 10);
+    }
+    return String(Number(n.toPrecision(9)));
+  }
+
+  function fmt(s) {
+    if (s === "Error") return s;
+    if (/e/.test(s)) return s.replace("e+", "e").replace(".", DEC);
+    const neg = s.startsWith("-");
+    if (neg) s = s.slice(1);
+    let [i, d] = s.split(".");
+    i = i.replace(/\B(?=(\d{3})+(?!\d))/g, GROUP);
+    return (neg ? "-" : "") + i + (d !== undefined ? DEC + d : "");
+  }
+
+  function fit() {
+    const base = Math.min(96, Math.round(Math.min(window.innerWidth, 440) * 0.22));
+    let size = base;
+    $num.style.fontSize = size + "px";
+    const avail = $disp.clientWidth - parseFloat(getComputedStyle($disp).paddingLeft) * 2;
+    while ($num.offsetWidth > avail && size > 24) {
+      size -= 2;
+      $num.style.fontSize = size + "px";
+    }
+  }
+
+  function render() {
+    $num.textContent = fmt(cur);
+    fit();
+    $ac.textContent = dirty ? "C" : "AC";
+    opBtns.forEach(b => b.classList.toggle("active", hl && op === b.dataset.op));
+  }
+
+  function resetAll() {
+    cur = "0"; acc = null; op = null; fresh = false;
+    afterEq = false; dirty = false; repeat = null; hl = false;
+  }
+
+  function digitCount(s) { return s.replace(/[-.]/g, "").length; }
+
+  function startIfNeeded() {
+    if (afterEq || cur === "Error") resetAll();
+  }
+
+  function inputDigit(d) {
+    startIfNeeded();
+    if (fresh) { cur = d; fresh = false; }
+    else if (cur === "0") cur = d;
+    else if (cur === "-0") cur = "-" + d;
+    else if (digitCount(cur) < 9) cur += d;
+    dirty = true; hl = false;
+    render();
+  }
+
+  function inputDot() {
+    startIfNeeded();
+    if (fresh) { cur = "0"; fresh = false; }
+    if (!cur.includes(".")) cur += ".";
+    dirty = true; hl = false;
+    render();
+  }
+
+  function operator(o) {
+    if (cur === "Error") return;
+    if (op && !fresh) {
+      cur = numToStr(calc(acc, op, val(cur)));
+      if (cur === "Error") { acc = null; op = null; fresh = true; hl = false; render(); return; }
+    }
+    acc = val(cur);
+    op = o; fresh = true; afterEq = false; repeat = null; dirty = false; hl = true;
+    render();
+  }
+
+  function equals() {
+    if (cur === "Error") return;
+    let r;
+    if (op) {
+      const b = val(cur);
+      r = calc(acc, op, b);
+      repeat = { op, b };
+    } else if (repeat) {
+      r = calc(val(cur), repeat.op, repeat.b);
+    } else return;
+    cur = numToStr(r);
+    op = null; acc = null; fresh = true; afterEq = true; dirty = false; hl = false;
+    render();
+  }
+
+  function negate() {
+    if (cur === "Error") return;
+    if (fresh && !afterEq) { cur = "-0"; fresh = false; }
+    else cur = cur.startsWith("-") ? cur.slice(1) : "-" + cur;
+    dirty = true; hl = false;
+    render();
+  }
+
+  function percent() {
+    if (cur === "Error") return;
+    const b = val(cur);
+    const r = (op && acc !== null && (op === "+" || op === "-")) ? acc * b / 100 : b / 100;
+    cur = numToStr(r);
+    fresh = false; hl = false;
+    render();
+  }
+
+  function clear() {
+    if (dirty) {
+      cur = "0"; dirty = false; afterEq = false;
+      if (op) { fresh = true; hl = true; } else { fresh = false; repeat = null; }
+    } else resetAll();
+    render();
+  }
+
+  function backspace() {
+    if (!dirty || fresh || cur === "Error" || cur.includes("e")) return;
+    cur = cur.slice(0, -1);
+    if (cur === "" || cur === "-") cur = "0";
+    render();
+  }
+
+  // Tombol layar
+  document.querySelector(".keys").addEventListener("click", e => {
+    const b = e.target.closest(".k");
+    if (!b) return;
+    switch (b.dataset.a) {
+      case "d": inputDigit(b.dataset.d); break;
+      case "dot": inputDot(); break;
+      case "op": b.dataset.op ? operator(b.dataset.op) : equals(); break;
+      case "eq": equals(); break;
+      case "neg": negate(); break;
+      case "pct": percent(); break;
+      case "clear": clear(); break;
+    }
+  });
+
+  // Swipe di layar angka buat hapus digit terakhir (kayak iPhone)
+  let sx = null, sy = null;
+  $disp.addEventListener("pointerdown", e => { sx = e.clientX; sy = e.clientY; });
+  $disp.addEventListener("pointerup", e => {
+    if (sx !== null && Math.abs(e.clientX - sx) > 24 && Math.abs(e.clientY - sy) < 40) backspace();
+    sx = sy = null;
+  });
+  $disp.addEventListener("pointercancel", () => { sx = sy = null; });
+
+  // Keyboard
+  window.addEventListener("keydown", e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key;
+    let handled = true;
+    if (/^[0-9]$/.test(k)) inputDigit(k);
+    else if (k === "." || k === ",") inputDot();
+    else if (k === "+" || k === "-" || k === "*" || k === "/") operator(k);
+    else if (k === "x" || k === "X") operator("*");
+    else if (k === "Enter" || k === "=") equals();
+    else if (k === "%") percent();
+    else if (k === "Backspace") backspace();
+    else if (k === "Escape" || k === "Delete") resetAll(), render();
+    else handled = false;
+    if (handled) e.preventDefault();
+  });
+
+  document.addEventListener("touchstart", () => {}, { passive: true }); // biar :active jalan di iOS
+  window.addEventListener("resize", fit);
+  render();
+
+  // Offline: daftarin service worker (harus lewat HTTPS / localhost)
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+})();
+</script>
+</body>
+</html>
